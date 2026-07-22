@@ -1,3 +1,9 @@
+# Dependencies & Next.js Build Output
+node_modules/
+.next/
+*.db
+*.sqlite
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

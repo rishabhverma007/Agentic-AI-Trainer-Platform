@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: allocator_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=ALLOCATOR.AI Backend Service
+      - DATABASE_URL=sqlite:///./allocator.db
+      - SECRET_KEY=super-secret-jwt-key-change-in-production
+    volumes:
+      - ./backend/allocator.db:/backend/allocator.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: allocator_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: allocator_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
