@@ -157,6 +157,16 @@ activemq-data/
 # Environments
 .env
 .envrc
+.env.local
+
+# Build artifacts
+tsconfig.tsbuildinfo
+.next/
+
+# Editor / Worktree
+.freebuff/
+.idea/
+.vscode/
 .venv
 env/
 venv/
