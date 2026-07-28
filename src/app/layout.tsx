@@ -4,6 +4,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { CustomCursor } from "@/components/ui/custom-cursor";
 import { JsonLd } from "@/components/ui/json-ld";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const BASE_URL = "https://allocator.ai";
 
@@ -94,6 +95,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
       <body className="bg-background text-foreground antialiased selection:bg-cyan-500/30 selection:text-white font-sans">
+        <ErrorBoundary source="RootLayout">
         <ReactQueryProvider>
           <AuthProvider>
             <CustomCursor />
@@ -205,6 +207,7 @@ export default function RootLayout({
             {children}
           </AuthProvider>
         </ReactQueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
