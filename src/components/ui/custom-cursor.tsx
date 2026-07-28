@@ -19,23 +19,11 @@ export function CustomCursor() {
     const cursor = cursorRef.current;
     const follower = followerRef.current;
 
-    cursor.removeAttribute("data-variant");
-    if (variant !== "default") {
-      cursor.setAttribute("data-variant", variant);
-    }
-    if (follower) {
-      follower.removeAttribute("data-variant");
-      if (variant !== "default") {
-        follower.setAttribute("data-variant", variant);
-      }
-    }
-
     switch (variant) {
       case "text":
         cursor.style.width = "8px";
         cursor.style.height = "8px";
         cursor.style.backgroundColor = "rgba(6, 182, 212, 0.8)";
-        cursor.style.mixBlendMode = "normal";
         if (follower) {
           follower.style.width = "48px";
           follower.style.height = "48px";
@@ -94,8 +82,8 @@ export function CustomCursor() {
     };
 
     const handleMouseDown = () => {
-      cursor.style.transform = "translate(-50%, -50%) scale(0.75)";
-      follower.style.transform = "translate(-50%, -50%) scale(0.85)";
+      cursor.style.transform = "translate(-50%, -50%) scale(0.8)";
+      follower.style.transform = "translate(-50%, -50%) scale(0.9)";
     };
 
     const handleMouseUp = () => {
@@ -104,11 +92,13 @@ export function CustomCursor() {
     };
 
     const handleMouseLeave = () => {
-      setCursor("hidden");
+      cursor.style.opacity = "0";
+      follower.style.opacity = "0";
     };
 
     const handleMouseEnter = () => {
-      setCursor(variantRef.current);
+      cursor.style.opacity = "1";
+      follower.style.opacity = "1";
     };
 
     const handleElementHover = (e: MouseEvent) => {
@@ -126,7 +116,12 @@ export function CustomCursor() {
         target.getAttribute("type") === "button"
       ) {
         setCursor("button");
-      } else if (tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable) {
+      } else if (
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        target.isContentEditable
+      ) {
         setCursor("text");
       } else {
         setCursor("default");
@@ -134,25 +129,29 @@ export function CustomCursor() {
     };
 
     const animate = () => {
-      const speed = 0.12;
+      // High lerp speed for nearly-instant follower tracking
+      const speed = 0.35;
       cursorPos.current.x += (mouseRef.current.x - cursorPos.current.x) * speed;
       cursorPos.current.y += (mouseRef.current.y - cursorPos.current.y) * speed;
 
+      // Cursor dot follows mouse instantly
       cursor.style.left = `${mouseRef.current.x}px`;
       cursor.style.top = `${mouseRef.current.y}px`;
 
+      // Follower ring tracks with minimal delay
       follower.style.left = `${cursorPos.current.x}px`;
       follower.style.top = `${cursorPos.current.y}px`;
 
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    // Use passive listeners for better scroll performance
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
-    document.addEventListener("mouseover", handleElementHover);
+    document.addEventListener("mouseover", handleElementHover, { passive: true });
 
     rafRef.current = requestAnimationFrame(animate);
 
@@ -169,7 +168,7 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* Cursor dot */}
+      {/* Cursor dot — instant follow */}
       <div
         ref={cursorRef}
         className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full"
@@ -178,12 +177,12 @@ export function CustomCursor() {
           height: "6px",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
           transform: "translate(-50%, -50%)",
-          transition: "width 0.3s ease, height 0.3s ease, background-color 0.3s ease, opacity 0.3s ease",
-          willChange: "transform",
-          mixBlendMode: "difference",
+          // Fast transitions for size/color changes only — position is rAF-driven
+          transition: "width 0.15s ease, height 0.15s ease, background-color 0.15s ease, opacity 0.2s ease, transform 0.1s ease",
+          willChange: "left, top, transform",
         }}
       />
-      {/* Cursor follower ring */}
+      {/* Cursor follower ring — lerp-trails the dot with nearly-zero delay */}
       <div
         ref={followerRef}
         className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full"
@@ -192,8 +191,8 @@ export function CustomCursor() {
           height: "32px",
           border: "1px solid rgba(255, 255, 255, 0.3)",
           transform: "translate(-50%, -50%)",
-          transition: "width 0.4s ease, height 0.4s ease, border-color 0.3s ease, background-color 0.3s ease, opacity 0.3s ease",
-          willChange: "transform",
+          transition: "width 0.2s ease, height 0.2s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.2s ease, transform 0.1s ease",
+          willChange: "left, top, transform",
         }}
       />
     </>
