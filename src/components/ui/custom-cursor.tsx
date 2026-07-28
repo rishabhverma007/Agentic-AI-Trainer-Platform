@@ -11,6 +11,9 @@ export function CustomCursor() {
   const mouseRef = useRef({ x: -100, y: -100 });
   const cursorPos = useRef({ x: -100, y: -100 });
   const variantRef = useRef<CursorVariant>("default");
+  const isPressedRef = useRef(false);
+  const cursorScaleRef = useRef(1);
+  const followerScaleRef = useRef(1);
 
   const setCursor = useCallback((variant: CursorVariant) => {
     variantRef.current = variant;
@@ -82,13 +85,15 @@ export function CustomCursor() {
     };
 
     const handleMouseDown = () => {
-      cursor.style.transform = "translate(-50%, -50%) scale(0.8)";
-      follower.style.transform = "translate(-50%, -50%) scale(0.9)";
+      isPressedRef.current = true;
+      cursorScaleRef.current = 0.8;   // snap immediately for tactile feedback
+      followerScaleRef.current = 0.9;
     };
 
     const handleMouseUp = () => {
-      cursor.style.transform = "translate(-50%, -50%) scale(1)";
-      follower.style.transform = "translate(-50%, -50%) scale(1)";
+      isPressedRef.current = false;
+      cursorScaleRef.current = 1;
+      followerScaleRef.current = 1;
     };
 
     const handleMouseLeave = () => {
@@ -134,13 +139,18 @@ export function CustomCursor() {
       cursorPos.current.x += (mouseRef.current.x - cursorPos.current.x) * speed;
       cursorPos.current.y += (mouseRef.current.y - cursorPos.current.y) * speed;
 
-      // Cursor dot follows mouse instantly
-      cursor.style.left = `${mouseRef.current.x}px`;
-      cursor.style.top = `${mouseRef.current.y}px`;
+      // Use transform translate for GPU-composited positioning (no layout thrash)
+      const dx = mouseRef.current.x;
+      const dy = mouseRef.current.y;
+      const fx = cursorPos.current.x;
+      const fy = cursorPos.current.y;
 
-      // Follower ring tracks with minimal delay
-      follower.style.left = `${cursorPos.current.x}px`;
-      follower.style.top = `${cursorPos.current.y}px`;
+      // Smoothly interpolate scale values for smooth click release animation
+      cursorScaleRef.current += (isPressedRef.current ? 0.8 : 1 - cursorScaleRef.current) * 0.25;
+      followerScaleRef.current += (isPressedRef.current ? 0.9 : 1 - followerScaleRef.current) * 0.25;
+
+      cursor.style.transform = `translate(${dx}px, ${dy}px) translate(-50%, -50%) scale(${cursorScaleRef.current})`;
+      follower.style.transform = `translate(${fx}px, ${fy}px) translate(-50%, -50%) scale(${followerScaleRef.current})`;
 
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -178,8 +188,8 @@ export function CustomCursor() {
           backgroundColor: "rgba(255, 255, 255, 0.9)",
           transform: "translate(-50%, -50%)",
           // Fast transitions for size/color changes only — position is rAF-driven
-          transition: "width 0.15s ease, height 0.15s ease, background-color 0.15s ease, opacity 0.2s ease, transform 0.1s ease",
-          willChange: "left, top, transform",
+      transition: "width 0.15s ease, height 0.15s ease, background-color 0.15s ease, opacity 0.2s ease",
+      willChange: "transform",
         }}
       />
       {/* Cursor follower ring — lerp-trails the dot with nearly-zero delay */}
@@ -191,8 +201,8 @@ export function CustomCursor() {
           height: "32px",
           border: "1px solid rgba(255, 255, 255, 0.3)",
           transform: "translate(-50%, -50%)",
-          transition: "width 0.2s ease, height 0.2s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.2s ease, transform 0.1s ease",
-          willChange: "left, top, transform",
+      transition: "width 0.2s ease, height 0.2s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.2s ease",
+      willChange: "transform",
         }}
       />
     </>
