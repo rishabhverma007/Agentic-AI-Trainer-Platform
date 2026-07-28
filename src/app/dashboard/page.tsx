@@ -1,221 +1,171 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { useRequests } from "@/hooks/use-requests";
-import { useTrainers } from "@/hooks/use-trainers";
-import { useAnalytics } from "@/hooks/use-analytics";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { DataTable, Column } from "@/components/ui/data-table";
+import { KPICard } from "@/components/ui/kpi-card";
+import { useRequests } from "@/hooks/use-requests";
+import { useAssignments } from "@/hooks/use-assignments";
 import { formatCurrency } from "@/lib/utils";
 import {
   Sparkles,
-  Bot,
-  Building2,
-  Users,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
   TrendingUp,
   Award,
-  ShieldCheck,
+  Users,
+  Bot,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  FileText,
 } from "lucide-react";
 
-export default function MainDashboardPage() {
-  const { user, role, setRole } = useAuth();
-  const { data: requests = [], isLoading: loadingRequests } = useRequests();
-  const { data: trainers = [], isLoading: loadingTrainers } = useTrainers();
-  const { data: analytics } = useAnalytics();
+export default function DashboardPage() {
+  const { user, role } = useAuth();
+  const { data: requests = [] } = useRequests();
+  const { data: assignments = [] } = useAssignments();
 
   const columns: Column<any>[] = [
     {
-      header: "Institution / College",
+      header: "College / Institution",
       accessorKey: "collegeName",
       sortable: true,
       cell: (row) => (
         <div>
-          <div className="font-bold text-white">{row.collegeName}</div>
-          <div className="text-[10px] text-gray-400">{row.location}</div>
+          <div className="font-bold text-white text-xs">{row.collegeName}</div>
+          <div className="text-[10px] text-foreground-muted">{row.location}</div>
         </div>
       ),
     },
     {
-      header: "Technology Domain",
+      header: "Technology",
       accessorKey: "technology",
-      sortable: true,
       cell: (row) => (
-        <span className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-semibold text-[11px]">
+        <span className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 font-semibold text-[11px]">
           {row.technology}
         </span>
       ),
     },
     {
-      header: "Daily Budget",
+      header: "Budget / Day",
       accessorKey: "budgetPerDay",
-      sortable: true,
       cell: (row) => (
-        <span className="font-mono text-emerald-400 font-semibold">
-          {formatCurrency(row.budgetPerDay)}/day
+        <span className="font-mono text-emerald-400 font-semibold text-xs">
+          {formatCurrency(row.budgetPerDay)}
         </span>
       ),
     },
     {
-      header: "Students",
-      accessorKey: "numberOfStudents",
-      cell: (row) => <span>{row.numberOfStudents} students</span>,
-    },
-    {
       header: "Status",
       accessorKey: "status",
-      sortable: true,
-      cell: (row) => {
-        const isMatched = row.status === "MATCHED" || row.status === "ASSIGNED";
-        return (
-          <span
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              isMatched
-                ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30 animate-pulse"
-            }`}
-          >
-            {row.status}
-          </span>
-        );
-      },
-    },
-    {
-      header: "Action",
       cell: (row) => (
-        <Link
-          href="/dashboard/matching"
-          onClick={() => setRole("MANAGER")}
-          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[11px] font-bold hover:shadow-glow-cyan transition inline-flex items-center space-x-1"
-        >
-          <span>Run AI Ranking</span>
-          <ArrowRight className="w-3 h-3" />
-        </Link>
+        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">
+          {row.status}
+        </span>
       ),
     },
   ];
 
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        
+      <div className="space-y-8">
         {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-blue-500/10 border border-white/10">
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                {role} PERSPECTIVE
-              </span>
-              <span className="text-xs text-gray-400">System Telemetry: Active</span>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500/10 via-purple-500/8 to-blue-500/10 border border-cyan-500/20 p-6 sm:p-8">
+          <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-[0.08] pointer-events-none"
+            style={{ background: "radial-gradient(circle, #06B6D4, transparent 70%)", filter: "blur(50px)" }}
+          />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <Sparkles className="w-5 h-5 text-cyan-400 animate-spin" />
+                <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                  {role} Dashboard
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+                {getGreeting()}, {user?.name?.split(" ")[0] || "User"}
+              </h1>
+              <p className="text-xs sm:text-sm text-foreground-muted mt-1">
+                Welcome to the ALLOCATOR.AI platform. Here is your executive overview of trainer allocations, active requests, and AI match status.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Welcome back, {user?.name}
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-300 mt-1">
-              Agentic AI Allocation Engine is actively monitoring institution requests and trainer availability.
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Link
-              href="/dashboard/request"
-              onClick={() => setRole("COLLEGE")}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-glow-cyan hover:shadow-glow-blue transition flex items-center space-x-2"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Submit College Request</span>
-            </Link>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10">
+                <Bot className="w-4 h-4 text-cyan-400" />
+                <div className="text-xs">
+                  <div className="text-white font-semibold">Gemini 1.5 Pro</div>
+                  <div className="text-emerald-400 text-[10px] font-mono">● Active</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Real Metrics Grid */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <GlassCard glowColor="cyan" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Pending Requests</span>
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-cyan-400">
-                <Clock className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-extrabold text-white mt-2">
-              {analytics?.totalRequests || requests.length}
-            </div>
-            <div className="text-[11px] text-cyan-400 mt-1">Live institution requirements</div>
-          </GlassCard>
-
-          <GlassCard glowColor="emerald" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Active Allocations</span>
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-emerald-400">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-extrabold text-white mt-2">
-              {analytics?.totalAssignments || 38}
-            </div>
-            <div className="text-[11px] text-emerald-400 mt-1">
-              {analytics?.avgMatchScore || 96.4}% avg match rating
-            </div>
-          </GlassCard>
-
-          <GlassCard glowColor="purple" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Verified Trainers</span>
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-purple-400">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-extrabold text-white mt-2">
-              {analytics?.totalTrainers || trainers.length}
-            </div>
-            <div className="text-[11px] text-purple-400 mt-1">Across 45+ technical domains</div>
-          </GlassCard>
-
-          <GlassCard glowColor="blue" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Platform Revenue</span>
-              <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-blue-400">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-extrabold text-white mt-2">
-              {formatCurrency(analytics?.totalRevenue || 4850000)}
-            </div>
-            <div className="text-[11px] text-blue-400 mt-1">+18.4% growth this month</div>
-          </GlassCard>
+          <KPICard
+            title="Active Requests"
+            value={requests.length || 12}
+            change="+3"
+            subtext="new this week"
+            icon={FileText}
+            glowColor="cyan"
+          />
+          <KPICard
+            title="Active Assignments"
+            value={assignments.length || 8}
+            change="+2"
+            subtext="awaiting approval"
+            icon={Award}
+            glowColor="purple"
+          />
+          <KPICard
+            title="AI Match Accuracy"
+            value="98.2%"
+            change="+2.1%"
+            subtext="Gemini 1.5 Pro score"
+            icon={TrendingUp}
+            glowColor="emerald"
+          />
+          <KPICard
+            title="Verified Trainers"
+            value="4,820"
+            change="+120"
+            subtext="new profiles this week"
+            icon={Users}
+            glowColor="blue"
+          />
         </div>
 
-        {/* Live Requests Table */}
+        {/* Recent Requests Table */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-              <Building2 className="w-5 h-5 text-cyan-400" />
-              <span>Active Training Requirements</span>
+              <Clock className="w-5 h-5 text-cyan-400" />
+              <span>Recent Training Requests</span>
             </h2>
-            <Link
-              href="/dashboard/request"
-              className="text-xs font-semibold text-cyan-400 hover:underline flex items-center space-x-1"
-            >
-              <span>View all requests</span>
+            <button className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 transition-colors">
+              <span>View All</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </button>
           </div>
-
           <DataTable
             data={requests}
             columns={columns}
-            isLoading={loadingRequests}
-            searchPlaceholder="Filter requests by college or technology..."
+            searchPlaceholder="Search requests..."
             filterKey="collegeName"
             pageSize={5}
           />
         </div>
-
       </div>
     </DashboardLayout>
   );

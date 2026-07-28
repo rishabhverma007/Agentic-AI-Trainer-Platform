@@ -4,129 +4,141 @@ import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { DataTable, Column } from "@/components/ui/data-table";
-import { Bot, ShieldAlert, Cpu, Activity, User, CheckCircle2, Server, Database } from "lucide-react";
-
-interface AdminUserRow {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastActive: string;
-}
-
-const MOCK_ADMIN_USERS: AdminUserRow[] = [
-  { id: "usr_1", name: "Alex Vance", email: "alex.vance@allocator.ai", role: "ADMIN", status: "ACTIVE", lastActive: "Just now" },
-  { id: "usr_2", name: "Sarah Jenkins", email: "s.jenkins@allocator.ai", role: "MANAGER", status: "ACTIVE", lastActive: "5m ago" },
-  { id: "usr_3", name: "Dr. Rajesh Sharma", email: "dean.academics@iitd.ac.in", role: "COLLEGE", status: "ACTIVE", lastActive: "1h ago" },
-  { id: "usr_4", name: "Marcus Aurelius Chen", email: "m.chen@ai-trainers.org", role: "TRAINER", status: "ACTIVE", lastActive: "2h ago" },
-  { id: "usr_5", name: "Dr. Aris Thorne", email: "a.thorne@ai-trainers.org", role: "TRAINER", status: "ACTIVE", lastActive: "1d ago" },
-];
+import { SystemHealthPanel } from "@/components/ui/system-health-panel";
+import { useAuth } from "@/context/AuthContext";
+import {
+  ShieldAlert,
+  Cpu,
+  Database,
+  Users,
+  Wifi,
+  HardDrive,
+} from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const [usersList, setUsersList] = useState(MOCK_ADMIN_USERS);
+  const { user } = useAuth();
 
-  const columns: Column<AdminUserRow>[] = [
+  const systemMetrics = [
+    { label: "API Response Time", value: "128ms", icon: Cpu, color: "emerald", status: "Optimal", iconClass: "bg-emerald-500/10 border-emerald-500/25 text-emerald-400", dotClass: "bg-emerald-400", textClass: "text-emerald-400" },
+    { label: "Database Connections", value: "24/100", icon: Database, color: "cyan", status: "Healthy", iconClass: "bg-cyan-500/10 border-cyan-500/25 text-cyan-400", dotClass: "bg-cyan-400", textClass: "text-cyan-400" },
+    { label: "Active WebSocket", value: "7 sessions", icon: Wifi, color: "blue", status: "Connected", iconClass: "bg-blue-500/10 border-blue-500/25 text-blue-400", dotClass: "bg-blue-400", textClass: "text-blue-400" },
+    { label: "Storage Used", value: "2.4 GB / 10 GB", icon: HardDrive, color: "amber", status: "Adequate", iconClass: "bg-amber-500/10 border-amber-500/25 text-amber-400", dotClass: "bg-amber-400", textClass: "text-amber-400" },
+  ];
+
+  const userColumns: Column<any>[] = [
     {
-      header: "User Profile",
+      header: "User",
       accessorKey: "name",
       sortable: true,
       cell: (row) => (
-        <div>
-          <div className="font-bold text-white">{row.name}</div>
-          <div className="text-[10px] text-gray-400 font-mono">{row.email}</div>
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-xl bg-brand-gradient p-[1px]">
+            <div className="w-full h-full bg-background rounded-[11px] flex items-center justify-center text-xs font-bold text-cyan-300">
+              {row.name?.charAt(0)}
+            </div>
+          </div>
+          <div>
+            <div className="font-bold text-white text-xs">{row.name}</div>
+            <div className="text-[10px] text-foreground-muted">{row.email}</div>
+          </div>
         </div>
       ),
     },
-    {
-      header: "System Role",
-      accessorKey: "role",
-      sortable: true,
-      cell: (row) => (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-          {row.role}
-        </span>
-      ),
-    },
+    { header: "Role", accessorKey: "role", sortable: true },
+    { header: "Organization", accessorKey: "organization", sortable: true },
     {
       header: "Status",
       accessorKey: "status",
-      cell: (row) => (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          {row.status}
+      cell: () => (
+        <span className="flex items-center space-x-1 text-emerald-400 text-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Active</span>
         </span>
       ),
     },
     {
-      header: "Last Session",
+      header: "Last Active",
       accessorKey: "lastActive",
-      cell: (row) => <span className="text-gray-400">{row.lastActive}</span>,
+      cell: () => <span className="text-foreground-muted text-xs">2m ago</span>,
     },
+  ];
+
+  const mockUsers = [
+    { id: 1, name: "Sarah Jenkins", email: "s.jenkins@allocator.ai", role: "Manager", organization: "Enterprise Allocation Team" },
+    { id: 2, name: "Dr. Rajesh Sharma", email: "dean.academics@iitd.ac.in", role: "College", organization: "IIT Delhi - Dept of CSE" },
+    { id: 3, name: "Marcus Chen", email: "m.chen@ai-trainers.org", role: "Trainer", organization: "Independent Specialist" },
+    { id: 4, name: "Alex Vance", email: "alex.vance@allocator.ai", role: "Admin", organization: "Platform Operations" },
+    { id: 5, name: "Elena Rostova", email: "e.rostova@tech-trainers.com", role: "Trainer", organization: "TechTrainers Pro" },
   ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-blue-500/10 border border-purple-500/30">
-          <div className="flex items-center space-x-2 mb-1">
-            <ShieldAlert className="w-5 h-5 text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">System Governance & Telemetry</h1>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/8 to-purple-500/10 border border-blue-500/20 p-6 sm:p-8">
+          <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-[0.08] pointer-events-none"
+            style={{ background: "radial-gradient(circle, #3B82F6, transparent 70%)", filter: "blur(50px)" }}
+          />
+          <div className="relative z-10">
+            <div className="flex items-center space-x-2 mb-1">
+              <ShieldAlert className="w-5 h-5 text-blue-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-300">
+                System Governance
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Platform Administration
+            </h1>
+            <p className="text-xs sm:text-sm text-foreground-muted mt-1">
+              System telemetry, user directory, API health monitoring, and governance controls.
+            </p>
           </div>
-          <p className="text-xs text-gray-300">
-            Monitor API Gateway health, Supabase pgvector indexes, agent execution logs, and system access policies.
-          </p>
         </div>
 
-        {/* Telemetry Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <GlassCard glowColor="purple" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">FastAPI API Gateway</span>
-              <Server className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-xl font-bold text-white mt-2 flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>Operational (99.98%)</span>
-            </div>
-            <div className="text-[10px] text-gray-400 mt-1 font-mono">Latency ~42ms</div>
-          </GlassCard>
-
-          <GlassCard glowColor="cyan" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Supabase pgvector DB</span>
-              <Database className="w-4 h-4 text-cyan-400" />
-            </div>
-            <div className="text-xl font-bold text-white mt-2">Active (4,820 Vectors)</div>
-            <div className="text-[10px] text-gray-400 mt-1 font-mono">Index: HNSW HnswCosine</div>
-          </GlassCard>
-
-          <GlassCard glowColor="blue" className="p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-400">Gemini 1.5 Pro Agents</span>
-              <Bot className="w-4 h-4 text-purple-400" />
-            </div>
-            <div className="text-xl font-bold text-white mt-2">v2.4 Orchestrator</div>
-            <div className="text-[10px] text-gray-400 mt-1 font-mono">Tokens: 142.8k / 1M free</div>
-          </GlassCard>
+        {/* System Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {systemMetrics.map((metric, i) => {
+            const Icon = metric.icon;
+            return (
+              <GlassCard key={i} glowColor={metric.color as "emerald"|"cyan"|"blue"|"amber"} className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-foreground-muted">{metric.label}</span>
+                  <div className={`p-2 rounded-xl ${metric.iconClass}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl font-extrabold text-white tracking-tight">{metric.value}</div>
+                <div className="flex items-center space-x-1.5 mt-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${metric.dotClass}`} />
+                  <span className={`text-[11px] ${metric.textClass} font-medium`}>{metric.status}</span>
+                </div>
+              </GlassCard>
+            );
+          })}
         </div>
 
-        {/* User Governance Table */}
+        {/* System Health Panel */}
+        <SystemHealthPanel telemetry={{
+          apiGateway: { status: "OPERATIONAL", latencyMs: 38, uptimePercentage: 99.98 },
+          vectorDatabase: { status: "HEALTHY", indexType: "HNSW HnswCosine", searchLatencyMs: 12 },
+          aiOrchestrator: { status: "ACTIVE", model: "Gemini 1.5 Pro", avgProcessingTimeMs: 180 },
+          notificationServices: { emailDeliveryRate: 99.6, whatsAppDeliveryRate: 99.4 },
+        }} />
+
+        {/* User Directory */}
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-            <User className="w-5 h-5 text-cyan-400" />
-            <span>Platform User Directory</span>
-          </h2>
-
+          <div className="flex items-center space-x-2">
+            <Users className="w-5 h-5 text-cyan-400" />
+            <h2 className="text-lg font-bold text-white">User Directory</h2>
+          </div>
           <DataTable
-            data={usersList}
-            columns={columns}
-            searchPlaceholder="Filter system users by name or role..."
+            data={mockUsers}
+            columns={userColumns}
+            searchPlaceholder="Search users by name, email or role..."
             filterKey="name"
-            pageSize={5}
+            pageSize={10}
           />
         </div>
-
       </div>
     </DashboardLayout>
   );
